@@ -1,8 +1,10 @@
 package com.internship.countryinfopedia.Activites;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,14 +34,20 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     ArrayList<Country> countries;
     CountryAdapter adapter;
-    private static final  String URL = "https://restcountries.eu/rest/v2/region/asia";
+    private static String URL = "https://restcountries.eu/rest/v2/region/asia";
+    ProgressDialog progressDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+
+        progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setMessage("loading please wait ...");
+
         countries = new ArrayList<>();
+        progressDialog.show();
         extractCountries();
 
 
@@ -49,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, URL, null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+
+                //Fetching response from the API
                 for (int i = 0; i < response.length(); i++) {
                     try {
                         JSONObject countryObj = response.getJSONObject(i);
@@ -60,7 +71,8 @@ public class MainActivity extends AppCompatActivity {
                         country.setPopulation(String.valueOf(countryObj.getInt("population")));
                         country.setFlag(countryObj.getString("flag"));
                         country.setBorder(countryObj.getString("borders"));
-                        country.setLanguages(countryObj.getString("languages"));
+                        JSONArray array = countryObj.getJSONArray("languages");
+                        country.setLanguages(getLangs(array));
                         countries.add(country);
 
                     } catch (JSONException e) {
@@ -68,15 +80,17 @@ public class MainActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }
+
                 binding.recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                 adapter = new CountryAdapter(countries,getApplicationContext());
                 binding.recyclerView.setAdapter(adapter);
+                progressDialog.dismiss();
             }
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
+                //Error
                 Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
-
             }
         });
 
@@ -104,6 +118,46 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.clearCache:
+                clearCache();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void clearCache() {
+
+        try {
+            File dir = MainActivity.this.getCacheDir();
+            deleteDir(dir);
+            Toast.makeText(this, "Cleared", Toast.LENGTH_SHORT).show();
+        }
+        catch (Exception e){
+            Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public static boolean deleteDir(File dir) {
+        if (dir != null && dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++) {
+                boolean success = deleteDir(new File(dir, children[i]));
+                if (!success) {
+                    return false;
+                }
+            }
+            return dir.delete();
+        } else if(dir!= null && dir.isFile()) {
+            return dir.delete();
+        } else {
+            return false;
+        }
+    }
+
+    //Search Features
     private void filter(String newText){
         ArrayList<Country> filteredCountries = new ArrayList<>();
         if (newText.isEmpty()){
@@ -118,5 +172,21 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         adapter.filter(filteredCountries);
+    }
+
+    //Get langs
+    String getLangs(JSONArray array) throws JSONException {
+        String lang = "";
+        for (int i = 0;i<array.length();i++){
+            lang+=array.getJSONObject(i).getString("name");
+            if (i == array.length()-1){
+                lang+=" .";
+            }
+            else
+            {
+                lang+=", ";
+            }
+        }
+        return lang;
     }
 }

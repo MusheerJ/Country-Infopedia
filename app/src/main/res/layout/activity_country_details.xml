@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white"
+    android:background="#F2EEEE"
     tools:context=".Activites.CountryDetails">
 
     <androidx.cardview.widget.CardView
@@ -78,7 +78,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="3dp"
-                    android:fontFamily="@font/roboto_medium"
+                    android:fontFamily="@font/poppins_medium"
                     android:text="MusheerAhmed"
                     android:textColor="#1d1d1d"
                     android:textSize="17sp" />

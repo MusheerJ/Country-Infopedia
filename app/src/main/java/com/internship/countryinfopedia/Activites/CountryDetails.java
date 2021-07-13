@@ -3,10 +3,16 @@ package com.internship.countryinfopedia.Activites;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.internship.countryinfopedia.Models.Country;
 import com.internship.countryinfopedia.Adapter.Utils;
 import com.internship.countryinfopedia.databinding.ActivityCountryDetailsBinding;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class CountryDetails extends AppCompatActivity {
     ActivityCountryDetailsBinding binding;
@@ -24,10 +30,21 @@ public class CountryDetails extends AppCompatActivity {
         binding.region.setText(country.getRegion());
         binding.subRegion.setText(country.getSubRegion());
         binding.population.setText(country.getPopulation());
-        binding.borders.setText(country.getBorder());
-        binding.languages.setText(null);
+        binding.languages.setText(country.getLanguages());
+        String borders = country.getBorder().replaceAll("\"", "");
+        borders = borders.replace("[","");
+        borders = borders.replace("]","");
+        if (borders.isEmpty()){
+            binding.borders.setText("None");
+        }
+        else{
+            binding.borders.setText(borders);
+        }
+
+
 
         Utils.fetchSvg(this,country.getFlag(),binding.flag);
+
     }
 
     @Override
