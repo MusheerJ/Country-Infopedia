@@ -23,14 +23,20 @@ public class CountryDetails extends AppCompatActivity {
         setContentView(binding.getRoot());
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+
+        //Getting the Country obj from the countryAdapter
         Country country = (Country) getIntent().getSerializableExtra("Details");
 
+
+        //Setting the country details
         binding.countryName.setText(country.getName());
         binding.capital.setText(country.getCapital());
         binding.region.setText(country.getRegion());
         binding.subRegion.setText(country.getSubRegion());
         binding.population.setText(country.getPopulation());
         binding.languages.setText(country.getLanguages());
+
+        //removing unwanted characters from the string
         String borders = country.getBorder().replaceAll("\"", "");
         borders = borders.replace("[","");
         borders = borders.replace("]","");
@@ -41,8 +47,7 @@ public class CountryDetails extends AppCompatActivity {
             binding.borders.setText(borders);
         }
 
-
-
+        //Loading the svg
         Utils.fetchSvg(this,country.getFlag(),binding.flag);
 
     }

@@ -56,7 +56,6 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
                     Log.d("MyError",e.toString());
                 }
 
-
             }
         });
 
@@ -67,10 +66,13 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
         return countries.size();
     }
 
+    //Search Feature
     public void filter(ArrayList<Country> filteredCountries) {
         this.countries = filteredCountries;
         notifyDataSetChanged();
     }
+
+
 
     public class CountryViewHolder extends RecyclerView.ViewHolder{
         SampleListBinding binding;

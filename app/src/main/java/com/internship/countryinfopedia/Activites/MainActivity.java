@@ -1,13 +1,24 @@
 package com.internship.countryinfopedia.Activites;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.room.Room;
+import androidx.room.RoomDatabase;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -19,6 +30,7 @@ import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.Volley;
 import com.internship.countryinfopedia.Models.Country;
 import com.internship.countryinfopedia.Adapter.CountryAdapter;
+import com.internship.countryinfopedia.Models.CountryDatabase;
 import com.internship.countryinfopedia.R;
 import com.internship.countryinfopedia.databinding.ActivityMainBinding;
 
@@ -36,23 +48,69 @@ public class MainActivity extends AppCompatActivity {
     CountryAdapter adapter;
     private static String URL = "https://restcountries.eu/rest/v2/region/asia";
     ProgressDialog progressDialog;
+    //DataBase
+    public  CountryDatabase database;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        //Progress Bar
         progressDialog = new ProgressDialog(MainActivity.this);
         progressDialog.setMessage("loading please wait ...");
 
         countries = new ArrayList<>();
         progressDialog.show();
-        extractCountries();
+
+        //country-db obj
+        database = Room.databaseBuilder(getApplicationContext(),CountryDatabase.class,"country-db").allowMainThreadQueries().build();
+        try{
+            ArrayList<Country> roomCountry = (ArrayList<Country>) database.countryDao().getCountries();
+
+            //Checking if the data is present in the room
+            if (roomCountry.isEmpty()){
+
+                if (haveNetwork()){
+                    //Fetching data from internet
+                    extractCountries();
+                    binding.InternetConnection.setVisibility(View.GONE);
+                    Log.d("FromVolley","Volley");
+                }
+                else{
+                    binding.InternetConnection.setVisibility(View.VISIBLE);
+                    progressDialog.dismiss();
+                }
+            }
+            else{
+                if (!haveNetwork()){
+                    Toast.makeText(this, "Please turn on your internet for better performance", Toast.LENGTH_SHORT).show();
+                }
+                //Fetching data from room
+                extractCountriesFromRoom(roomCountry);
+                Log.d("FromRoom","Room");
+            }
+        }
+        catch (Exception e){
+            Log.d("readErrorMy",e.getMessage());
+        }
 
 
     }
 
+    // Setting data which was extracted from the room.
+    private void extractCountriesFromRoom(ArrayList<Country> roomCountry) {
+        countries.addAll(roomCountry);
+        binding.recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
+        adapter = new CountryAdapter(countries,getApplicationContext());
+        binding.recyclerView.setAdapter(adapter);
+        progressDialog.dismiss();
+    }
+
+
+    //Getting Data
     private void extractCountries() {
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, URL, null, new Response.Listener<JSONArray>() {
@@ -75,12 +133,22 @@ public class MainActivity extends AppCompatActivity {
                         country.setLanguages(getLangs(array));
                         countries.add(country);
 
+                        try {
+                            // Adding data to room
+                            database.countryDao().addCountry(country);
+                        }
+                        catch (Exception e){
+                            Log.d("MyDB",e.getMessage());
+                        }
+
+
                     } catch (JSONException e) {
                         Toast.makeText(MainActivity.this, e.toString() , Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
                 }
 
+                //Binding data to the recyclerView
                 binding.recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
                 adapter = new CountryAdapter(countries,getApplicationContext());
                 binding.recyclerView.setAdapter(adapter);
@@ -94,9 +162,11 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        //Adding request to the queue
         queue.add(jsonArrayRequest);
     }
 
+    //Creating menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main,menu);
@@ -118,21 +188,31 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
+    //Menu Options
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.clearCache:
                 clearCache();
                 break;
+            case R.id.refresh:
+                Intent intent=new Intent();
+                intent.setClass(MainActivity.this, MainActivity.class);
+                finish();
+                startActivity(intent);
+                break;
+
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void clearCache() {
-
+    //Clear Cache Feature
+    public void clearCache() {
         try {
             File dir = MainActivity.this.getCacheDir();
             deleteDir(dir);
+            database.countryDao().deleteCountries();
+            binding.recyclerView.setVisibility(View.GONE);
             Toast.makeText(this, "Cleared", Toast.LENGTH_SHORT).show();
         }
         catch (Exception e){
@@ -140,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static boolean deleteDir(File dir) {
+    public  boolean deleteDir(File dir) {
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
             for (int i = 0; i < children.length; i++) {
@@ -174,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
         adapter.filter(filteredCountries);
     }
 
-    //Get langs
+    //Get languages
     String getLangs(JSONArray array) throws JSONException {
         String lang = "";
         for (int i = 0;i<array.length();i++){
@@ -189,4 +269,15 @@ public class MainActivity extends AppCompatActivity {
         }
         return lang;
     }
+
+
+    //Check Internet Connection
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    private boolean haveNetwork(){
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
 }

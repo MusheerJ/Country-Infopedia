@@ -1,12 +1,27 @@
 package com.internship.countryinfopedia.Models;
 
+import androidx.room.Entity;
+import androidx.room.PrimaryKey;
+
 import java.io.Serializable;
 
+@Entity(tableName = "Countries")
 public class Country implements Serializable {
+
+    @PrimaryKey(autoGenerate = true)
+    private int id;
     private String name, capital, flag, region, subRegion, population;
     private String border,languages;
 
     public Country() {
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Country(String name, String capital, String flag, String region, String subRegion, String population) {
