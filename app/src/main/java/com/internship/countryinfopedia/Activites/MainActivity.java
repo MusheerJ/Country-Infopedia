@@ -19,6 +19,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Adapter;
 import android.widget.SearchView;
 import android.widget.Toast;
 
@@ -46,10 +47,10 @@ public class MainActivity extends AppCompatActivity {
     ActivityMainBinding binding;
     ArrayList<Country> countries;
     CountryAdapter adapter;
-    private static String URL = "https://restcountries.eu/rest/v2/region/asia";
+    private static String URL = "https://restcountries.com/v3.1/region/asia";
     ProgressDialog progressDialog;
     //DataBase
-    public  CountryDatabase database;
+    public CountryDatabase database;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -66,35 +67,32 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.show();
 
         //country-db obj
-        database = Room.databaseBuilder(getApplicationContext(),CountryDatabase.class,"country-db").allowMainThreadQueries().build();
-        try{
+        database = Room.databaseBuilder(getApplicationContext(), CountryDatabase.class, "country-db").allowMainThreadQueries().build();
+        try {
             ArrayList<Country> roomCountry = (ArrayList<Country>) database.countryDao().getCountries();
 
             //Checking if the data is present in the room
-            if (roomCountry.isEmpty()){
+            if (roomCountry.isEmpty()) {
 
-                if (haveNetwork()){
+                if (haveNetwork()) {
                     //Fetching data from internet
                     extractCountries();
                     binding.InternetConnection.setVisibility(View.GONE);
-                    Log.d("FromVolley","Volley");
-                }
-                else{
+                    Log.d("FromVolley", "Volley");
+                } else {
                     binding.InternetConnection.setVisibility(View.VISIBLE);
                     progressDialog.dismiss();
                 }
-            }
-            else{
-                if (!haveNetwork()){
+            } else {
+                if (!haveNetwork()) {
                     Toast.makeText(this, "Please turn on your internet for better performance", Toast.LENGTH_SHORT).show();
                 }
                 //Fetching data from room
                 extractCountriesFromRoom(roomCountry);
-                Log.d("FromRoom","Room");
+                Log.d("FromRoom", "Room");
             }
-        }
-        catch (Exception e){
-            Log.d("readErrorMy",e.getMessage());
+        } catch (Exception e) {
+            Log.d("readErrorMy", e.getMessage());
         }
 
 
@@ -104,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
     private void extractCountriesFromRoom(ArrayList<Country> roomCountry) {
         countries.addAll(roomCountry);
         binding.recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-        adapter = new CountryAdapter(countries,getApplicationContext());
+        adapter = new CountryAdapter(countries, getApplicationContext());
         binding.recyclerView.setAdapter(adapter);
         progressDialog.dismiss();
     }
@@ -122,35 +120,37 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         JSONObject countryObj = response.getJSONObject(i);
                         Country country = new Country();
-                        country.setName(countryObj.getString("name"));
-                        country.setCapital(countryObj.getString("capital"));
+                        country.setName(countryObj.getJSONObject("name").getString("common"));
+                        Log.d("NAME", "onResponse: " + countryObj.getJSONObject("name").getString("common"));
+                        country.setCapital(countryObj.getJSONArray("capital").getString(0));
+                        Log.d("CAPITAL", "onResponse: " + countryObj.getJSONArray("capital").getString(0));
                         country.setRegion(countryObj.getString("region"));
+                        Log.d("REGION", "onResponse: " + countryObj.getString("region"));
                         country.setSubRegion(countryObj.getString("subregion"));
                         country.setPopulation(String.valueOf(countryObj.getInt("population")));
-                        country.setFlag(countryObj.getString("flag"));
+                        country.setFlag(countryObj.getJSONObject("flags").getString("svg"));
                         country.setBorder(countryObj.getString("borders"));
-                        JSONArray array = countryObj.getJSONArray("languages");
-                        country.setLanguages(getLangs(array));
+                        Log.d("BORERS,", "onResponse: " + countryObj.getString("borders"));
+                        country.setLanguages(countryObj.getString("languages"));
                         countries.add(country);
 
                         try {
                             // Adding data to room
                             database.countryDao().addCountry(country);
-                        }
-                        catch (Exception e){
-                            Log.d("MyDB",e.getMessage());
+                        } catch (Exception e) {
+                            Log.d("MyDB", e.getMessage());
                         }
 
 
                     } catch (JSONException e) {
-                        Toast.makeText(MainActivity.this, e.toString() , Toast.LENGTH_SHORT).show();
+//                        Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
                 }
 
                 //Binding data to the recyclerView
                 binding.recyclerView.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
-                adapter = new CountryAdapter(countries,getApplicationContext());
+                adapter = new CountryAdapter(countries, getApplicationContext());
                 binding.recyclerView.setAdapter(adapter);
                 progressDialog.dismiss();
             }
@@ -169,9 +169,9 @@ public class MainActivity extends AppCompatActivity {
     //Creating menu
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main,menu);
+        getMenuInflater().inflate(R.menu.main, menu);
         MenuItem menuItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView)menuItem.getActionView();
+        SearchView searchView = (SearchView) menuItem.getActionView();
         searchView.setQueryHint("Search country");
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -191,12 +191,12 @@ public class MainActivity extends AppCompatActivity {
     //Menu Options
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.clearCache:
                 clearCache();
                 break;
             case R.id.refresh:
-                Intent intent=new Intent();
+                Intent intent = new Intent();
                 intent.setClass(MainActivity.this, MainActivity.class);
                 finish();
                 startActivity(intent);
@@ -214,13 +214,12 @@ public class MainActivity extends AppCompatActivity {
             database.countryDao().deleteCountries();
             binding.recyclerView.setVisibility(View.GONE);
             Toast.makeText(this, "Cleared", Toast.LENGTH_SHORT).show();
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Toast.makeText(this, e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
 
-    public  boolean deleteDir(File dir) {
+    public boolean deleteDir(File dir) {
         if (dir != null && dir.isDirectory()) {
             String[] children = dir.list();
             for (int i = 0; i < children.length; i++) {
@@ -230,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             return dir.delete();
-        } else if(dir!= null && dir.isFile()) {
+        } else if (dir != null && dir.isFile()) {
             return dir.delete();
         } else {
             return false;
@@ -238,15 +237,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //Search Features
-    private void filter(String newText){
+    private void filter(String newText) {
         ArrayList<Country> filteredCountries = new ArrayList<>();
-        if (newText.isEmpty()){
+        if (newText.isEmpty()) {
             adapter.filter(countries);
             return;
-        }
-        else{
-            for (Country country : countries){
-                if (country.getName().toLowerCase().contains(newText.toLowerCase())){
+        } else {
+            for (Country country : countries) {
+                if (country.getName().toLowerCase().contains(newText.toLowerCase())) {
                     filteredCountries.add(country);
                 }
             }
@@ -257,14 +255,12 @@ public class MainActivity extends AppCompatActivity {
     //Get languages
     String getLangs(JSONArray array) throws JSONException {
         String lang = "";
-        for (int i = 0;i<array.length();i++){
-            lang+=array.getJSONObject(i).getString("name");
-            if (i == array.length()-1){
-                lang+=" .";
-            }
-            else
-            {
-                lang+=", ";
+        for (int i = 0; i < array.length(); i++) {
+            lang += array.getJSONObject(i).getString("name");
+            if (i == array.length() - 1) {
+                lang += " .";
+            } else {
+                lang += ", ";
             }
         }
         return lang;
@@ -273,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Check Internet Connection
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private boolean haveNetwork(){
+    private boolean haveNetwork() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();

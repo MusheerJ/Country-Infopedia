@@ -18,7 +18,7 @@ import com.internship.countryinfopedia.databinding.SampleListBinding;
 import java.util.ArrayList;
 
 
-public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryViewHolder>{
+public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryViewHolder> {
     ArrayList<Country> countries;
     Context context;
 
@@ -30,7 +30,7 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
     @NonNull
     @Override
     public CountryViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(context).inflate(R.layout.sample_list,parent,false);
+        View view = LayoutInflater.from(context).inflate(R.layout.sample_list, parent, false);
         return new CountryViewHolder(view);
     }
 
@@ -41,19 +41,19 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
         holder.binding.SubRegion.setText(country.getSubRegion());
 
         // Placing the svg
-        Utils.fetchSvg(context,country.getFlag(),holder.binding.imageView);
+        Utils.fetchSvg(context, country.getFlag(), holder.binding.imageView);
 
         holder.binding.ItemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(context, CountryDetails.class);
-                intent.putExtra("Details",country);
+                intent.putExtra("Details", country);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 try {
 
                     context.startActivity(intent);
-                }catch (Exception e){
-                    Log.d("MyError",e.toString());
+                } catch (Exception e) {
+                    Log.d("MyError", e.toString());
                 }
 
             }
@@ -73,9 +73,9 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
     }
 
 
-
-    public class CountryViewHolder extends RecyclerView.ViewHolder{
+    public class CountryViewHolder extends RecyclerView.ViewHolder {
         SampleListBinding binding;
+
         public CountryViewHolder(@NonNull View itemView) {
             super(itemView);
             binding = SampleListBinding.bind(itemView);

@@ -11,7 +11,7 @@ public class Country implements Serializable {
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String name, capital, flag, region, subRegion, population;
-    private String border,languages;
+    private String border, languages;
 
     public Country() {
     }
