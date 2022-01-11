@@ -20,9 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".Activites.CountryDetails" />
-        <activity android:name=".Activites.MainActivity">
-
-        </activity>
+        <activity android:name=".Activites.MainActivity"></activity>
 
         <meta-data
             android:name="preloaded_fonts"

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.internship.countryinfopedia.Models.Country;
 import com.internship.countryinfopedia.Adapter.Utils;
 import com.internship.countryinfopedia.databinding.ActivityCountryDetailsBinding;
@@ -16,11 +17,13 @@ import org.json.JSONObject;
 
 public class CountryDetails extends AppCompatActivity {
     ActivityCountryDetailsBinding binding;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityCountryDetailsBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        getSupportActionBar().hide();
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
 
@@ -38,17 +41,17 @@ public class CountryDetails extends AppCompatActivity {
 
         //removing unwanted characters from the string
         String borders = country.getBorder().replaceAll("\"", "");
-        borders = borders.replace("[","");
-        borders = borders.replace("]","");
-        if (borders.isEmpty()){
+        borders = borders.replace("[", "");
+        borders = borders.replace("]", "");
+        if (borders.isEmpty()) {
             binding.borders.setText("None");
-        }
-        else{
+        } else {
             binding.borders.setText(borders);
         }
 
         //Loading the svg
-        Utils.fetchSvg(this,country.getFlag(),binding.flag);
+        //Utils.fetchSvg(this,country.getFlag(),binding.flag);
+        Glide.with(this).load(country.getFlag()).into(binding.flag);
 
     }
 

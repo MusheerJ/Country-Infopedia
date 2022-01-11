@@ -23,8 +23,8 @@
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="80dp"
+            android:layout_height="55dp"
             app:srcCompat="@drawable/avatar" />
 
         <LinearLayout

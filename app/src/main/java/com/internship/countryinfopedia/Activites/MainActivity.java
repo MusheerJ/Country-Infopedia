@@ -41,14 +41,16 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
-    ActivityMainBinding binding;
-    ArrayList<Country> countries;
-    CountryAdapter adapter;
+    private ActivityMainBinding binding;
+    private ArrayList<Country> countries;
+    private CountryAdapter adapter;
     private static String URL = "https://restcountries.com/v3.1/region/asia";
-    ProgressDialog progressDialog;
+    private ProgressDialog progressDialog;
     //DataBase
     public CountryDatabase database;
 
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         progressDialog.setMessage("loading please wait ...");
 
         countries = new ArrayList<>();
-        progressDialog.show();
+
 
         //country-db obj
         database = Room.databaseBuilder(getApplicationContext(), CountryDatabase.class, "country-db").allowMainThreadQueries().build();
@@ -110,6 +112,7 @@ public class MainActivity extends AppCompatActivity {
 
     //Getting Data
     private void extractCountries() {
+        progressDialog.show();
         RequestQueue queue = Volley.newRequestQueue(this);
         JsonArrayRequest jsonArrayRequest = new JsonArrayRequest(Request.Method.GET, URL, null, new Response.Listener<JSONArray>() {
             @Override
@@ -120,17 +123,23 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         JSONObject countryObj = response.getJSONObject(i);
                         Country country = new Country();
+
                         country.setName(countryObj.getJSONObject("name").getString("common"));
                         Log.d("NAME", "onResponse: " + countryObj.getJSONObject("name").getString("common"));
+
                         country.setCapital(countryObj.getJSONArray("capital").getString(0));
                         Log.d("CAPITAL", "onResponse: " + countryObj.getJSONArray("capital").getString(0));
+
                         country.setRegion(countryObj.getString("region"));
                         Log.d("REGION", "onResponse: " + countryObj.getString("region"));
+
                         country.setSubRegion(countryObj.getString("subregion"));
                         country.setPopulation(String.valueOf(countryObj.getInt("population")));
-                        country.setFlag(countryObj.getJSONObject("flags").getString("svg"));
+                        country.setFlag(countryObj.getJSONObject("flags").getString("png"));
+
                         country.setBorder(countryObj.getString("borders"));
                         Log.d("BORERS,", "onResponse: " + countryObj.getString("borders"));
+
                         country.setLanguages(countryObj.getString("languages"));
                         countries.add(country);
 

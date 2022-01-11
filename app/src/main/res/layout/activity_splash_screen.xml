@@ -8,14 +8,14 @@
 
     <ImageView
         android:id="@+id/Logo"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
+        android:layout_width="wrap_content"
+        android:layout_height="155dp"
+        android:src="@drawable/ic_undraw_world_re_768g"
         app:layout_constraintBottom_toTopOf="@+id/Text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.463"
-        app:srcCompat="@drawable/country_infopedia" />
+        app:layout_constraintVertical_bias="0.463" />
 
     <TextView
         android:id="@+id/Text"
@@ -23,9 +23,10 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="30dp"
         android:fontFamily="@font/poppins_bold"
-        android:text="Country Infopedia"
         android:forceDarkAllowed="false"
-        android:textSize="24sp"
+        android:text="Country Infopedia"
+        android:textColor="#6c63ff"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

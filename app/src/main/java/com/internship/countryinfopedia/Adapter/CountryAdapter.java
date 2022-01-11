@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.internship.countryinfopedia.Activites.CountryDetails;
 import com.internship.countryinfopedia.Models.Country;
 import com.internship.countryinfopedia.R;
@@ -40,8 +41,11 @@ public class CountryAdapter extends RecyclerView.Adapter<CountryAdapter.CountryV
         holder.binding.CountryName.setText(country.getName());
         holder.binding.SubRegion.setText(country.getSubRegion());
 
+        //for loading images
+        Glide.with(context).load(country.getFlag()).into(holder.binding.imageView);
+
         // Placing the svg
-        Utils.fetchSvg(context, country.getFlag(), holder.binding.imageView);
+        // Utils.fetchSvg(context, country.getFlag(), holder.binding.imageView);
 
         holder.binding.ItemView.setOnClickListener(new View.OnClickListener() {
             @Override
